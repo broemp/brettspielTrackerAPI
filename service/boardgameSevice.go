@@ -21,7 +21,7 @@ var PARAMETERS = []string{
 	"username",
 	"minPlayer",
 	"maxPlayer",
-	"Rating",
+	"rating",
 	"minComplexity",
 	"maxComplexity",
 	"minPlaytime",
@@ -48,36 +48,21 @@ func (service *boardgameService) RandomBoardgame(queryMap map[string]string) (en
 
 	if collection.Username != queryMap["username"] {
 		err := pullCollection(queryMap["username"])
-
 		if err != nil {
 			return entity.Boardgame{}, err
 		}
-
 		initializers.DB.Preload("Games").First(&collection, "username = ?", queryMap["username"])
 	}
 
 	length := len(collection.Games)
-
 	if length == 0 {
 		return entity.Boardgame{}, errors.New("Empty Collection")
 	}
 
-	randomBGGID := collection.Games[rand.Intn(length)].BGGID
-
-	var boardgame entity.Boardgame
-	initializers.DB.First(&boardgame, "bgg_id = ?", randomBGGID)
-
+	boardgameList, err := filterCollection(collection, queryMap)
+	checkError(err)
+	boardgame := boardgameList[rand.Intn(len(boardgameList))]
 	return boardgame, nil
-}
-
-func stringToInt(s string) int {
-	i, err := strconv.Atoi(s)
-
-	if err != nil {
-		println("Failed to convert String: ", err)
-	}
-
-	return i
 }
 
 // Pull Collection from BGG
@@ -90,13 +75,9 @@ func pullCollection(username string) error {
 request:
 	// HTTP Request
 	resp, err := http.Get(apiQuery)
-	if err != nil {
-		log.Println(err)
-	}
+	checkError(err)
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-	}
+	checkError(err)
 
 	if resp.StatusCode == 202 || resp.StatusCode == 429 {
 		println("Repeat Request: Wait time ", counter, " Seconds")
@@ -129,10 +110,7 @@ request:
 			collection.Games = append(collection.Games, boardgame)
 		} else if bggThing.Status.Own == "1" {
 			rating, err := strconv.ParseFloat(bggThing.Stats.Rating.Average.Value, 8)
-
-			if err != nil {
-				println(err)
-			}
+			checkError(err)
 
 			boardgame = entity.Boardgame{
 				Name:        bggThing.Name.Text,
@@ -156,8 +134,45 @@ request:
 	return nil
 }
 
-func databaseRequest(collection entity.Collection, queryMap map[string]string) ([]entity.Boardgame, error) {
+// Prints error to log if it exists
+func checkError(err error) {
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// Converts Strings to int
+func stringToInt(s string) int {
+	i, err := strconv.Atoi(s)
+
+	if err != nil {
+		println("Failed to convert String: ", err)
+	}
+	return i
+}
+
+// I'm to dump to write SQL Querys
+func filterCollection(collection entity.Collection, queryMap map[string]string) ([]entity.Boardgame, error) {
 	var boardgameList []entity.Boardgame
+
+	// Shit implementation
+	// TODO: Make it not shit
+	for _, boardgame := range collection.Games {
+
+		if queryMap["minPlayer"] == "" || boardgame.MinPlayer >= stringToInt(queryMap["minPlayer"]) {
+			if queryMap["maxPlayer"] == "" || boardgame.MaxPlayer <= stringToInt(queryMap["maxPlayer"]) {
+				if queryMap["minPlaytime"] == "" || boardgame.MinPlaytime >= stringToInt(queryMap["minPlaytime"]) {
+					if queryMap["maxPlaytime"] == "" || boardgame.MaxPlaytime <= stringToInt(queryMap["maxPlaytime"]) {
+						rating, _ := strconv.ParseFloat(queryMap["rating"], 64)
+						if queryMap["rating"] == "" || boardgame.Rating >= rating {
+							boardgameList = append(boardgameList, boardgame)
+						}
+					}
+				}
+			}
+		}
+
+	}
 
 	return boardgameList, nil
 }

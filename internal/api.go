@@ -20,6 +20,7 @@ var (
 func StartServer() {
 
 	server := gin.New()
+	server.Use(gin.Logger(), gin.Recovery())
 
 	// Set config production to true to change to production mode
 	if viper.GetBool("production") {
