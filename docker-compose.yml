@@ -1,0 +1,24 @@
+---
+version: '3.1'
+
+services:
+
+  brettspielTrackerAPI:
+    container_name: brettspielTracker-API
+    image: boardgame_docker
+    restart: always
+    environment:
+        DBIP: 172.17.0.1
+
+
+  db:
+    container_name: brettspielTracker-DB
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: QLpqd2p9nnC83eQjT53K5mLSqkJEY3Wf
+      POSTGRES_USER: boardgames
+      POSTGRES_DB: boardgames 
+
+
+

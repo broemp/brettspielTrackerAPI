@@ -36,8 +36,10 @@ func StartServer() {
 
 func createBoardgameAPI(apiRoutes gin.RouterGroup) {
 
-	apiRoutes.GET("/boardgames/random/:username", func(ctx *gin.Context) {
-		game, err := boardgameController.RandomBoardgameFromBGGCollection(ctx)
+	// Random Boardgame
+	apiRoutes.GET("/boardgames/random", func(ctx *gin.Context) {
+
+		game, err := boardgameController.RandomBoardgame(ctx)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		} else {

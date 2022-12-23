@@ -221,6 +221,11 @@ type BGGThing struct {
 	} `xml:"item"`
 }
 
-type Message struct {
-	Message string `xml:"message"`
+type BGGErrors struct {
+	XMLName xml.Name `xml:"errors"`
+	Text    string   `xml:",chardata"`
+	Error   struct {
+		Text    string `xml:",chardata"`
+		Message string `xml:"message"`
+	} `xml:"error"`
 }
