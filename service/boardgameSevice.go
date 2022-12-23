@@ -108,7 +108,6 @@ request:
 			collection.Games = append(collection.Games, boardgame)
 		} else if bggThing.Status.Own == "1" {
 			rating, err := strconv.ParseFloat(bggThing.Stats.Rating.Average.Value, 8)
-			println(rating)
 
 			if err != nil {
 				println(err)
