@@ -2,6 +2,7 @@ package initializers
 
 import (
 	"log"
+	"time"
 
 	"github.com/broemp/brettspielTrackerAPI/entity"
 	"github.com/spf13/viper"
@@ -14,10 +15,15 @@ var DB *gorm.DB
 func ConnectToDB() {
 	var err error
 	dsn := buildConnectionString()
+	counter := 1
+connection:
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		log.Fatal("Failed to connect to Database: ", err)
+		log.Println("Failed to connect to Database: ", err)
+		time.Sleep(time.Duration(counter) * time.Second)
+		counter += 2
+		goto connection
 	}
 	DB.AutoMigrate(&entity.Boardgame{}, &entity.Collection{})
 }

@@ -1,13 +1,15 @@
 package controller
 
 import (
+	"errors"
+
 	"github.com/broemp/brettspielTrackerAPI/entity"
 	"github.com/broemp/brettspielTrackerAPI/service"
 	"github.com/gin-gonic/gin"
 )
 
 type BoardgameController interface {
-	RandomBoardgameFromBGGCollection(ctx *gin.Context) (entity.Boardgame, error)
+	RandomBoardgame(ctx *gin.Context) (entity.Boardgame, error)
 }
 type controller struct {
 	service service.BoardgameService
@@ -19,10 +21,21 @@ func NewBoardgameService(service service.BoardgameService) BoardgameController {
 	}
 }
 
-func (c *controller) RandomBoardgameFromBGGCollection(ctx *gin.Context) (entity.Boardgame, error) {
-	username := ctx.Param("username")
+func (c *controller) RandomBoardgame(ctx *gin.Context) (entity.Boardgame, error) {
 
-	randomGame, err := c.service.RandomBoardgameFromBGGCollection(username)
+	queryMap := make(map[string]string)
+
+	if ctx.Query("username") == "" {
+		return entity.Boardgame{}, errors.New("Empty username")
+	}
+
+	for _, s := range service.PARAMETERS {
+		if val, exists := ctx.GetQuery(s); exists {
+			queryMap[s] = val
+		}
+	}
+
+	randomGame, err := c.service.RandomBoardgame(queryMap)
 
 	if err != nil {
 		return randomGame, err
